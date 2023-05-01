@@ -14,30 +14,6 @@ public class Matrix
 
    private List<double> _au = new();
 
-   public void Add(int i, int j, double value)
-   {
-      switch (j - i)
-      {
-         case -1:
-            {
-               _al.Add(value);
-               break;
-            }
-         case 0:
-            {
-               _di.Add(value);
-               break;
-            }
-         case 1:
-            {
-               _au.Add(value);
-               break;
-            }
-         default:
-               throw new Exception("Value added out of 3-diag matrix !!!");
-      }
-   }
-
    public double this[int i, int j]
    {
       get
@@ -121,7 +97,7 @@ public class Matrix
       for (int i = 0; i < Size; i++)
       {
          for (int j = 0; j < Size; j++)
-            Console.Write($"{this[i, j]} ");
+            Console.Write($"{this[i, j].ToString("E5")} ");
          Console.WriteLine();
       }
    }
@@ -144,6 +120,11 @@ public class Vector1
    {
       _elems = arr.ToList();
       Size = arr.Length;
+   }
+
+   public ImmutableArray<double> GetVector()
+   {
+      return _elems.ToImmutableArray<double>();
    }
 
    public Vector1(Spline spline)
