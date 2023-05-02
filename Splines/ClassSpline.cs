@@ -58,11 +58,11 @@ public class Spline
       {
          if (x < _X[0] && x > _X[^1])
          {
-            throw new Exception($"Point {x} out range");
+            throw new IndexOutOfRangeException($"Point {x} out range");
          }
 
          int i = 0;
-         while (x > _X[i])
+         while (x > _X[i + 1])
             i++;
 
 
