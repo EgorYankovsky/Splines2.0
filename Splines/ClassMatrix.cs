@@ -1,19 +1,28 @@
-﻿using SplineLib;
-using System.Collections.Immutable;
-using System.Numerics;
+﻿using System.Collections.Immutable;
+using System.Runtime.InteropServices.Marshalling;
 
-namespace MatrixLib;
+namespace Project;
 
 public class Matrix
 {
+   // Размер матрицы.
    public int Size { get; init; }
 
+   // Компоненты матрицы нижнего треугольника.
    private List<double> _al = new();
 
+   // Компоненты диагонали матрицы.
    private List<double> _di = new();
 
+   // Компоненты верхнего треугольника матрицы.
    private List<double> _au = new();
 
+   /// <summary>
+   /// Метод, возвращающий значение матрицы на i-ой строке и j-ом столбце. 
+   /// </summary>
+   /// <param name="i">Строка.</param>
+   /// <param name="j">Столбец.</param>
+   /// <returns>Значение матрицы.</returns>
    public double this[int i, int j]
    {
       get
@@ -53,6 +62,10 @@ public class Matrix
       }
    }
 
+   /// <summary>
+   /// Конструктор матрицы.
+   /// </summary>
+   /// <param name="Size">Размерность матрицы.</param>
    public Matrix(int Size)
    {
       this.Size = Size;
@@ -65,6 +78,10 @@ public class Matrix
       }
    }
 
+   /// <summary>
+   /// Конструктор матрицы.
+   /// </summary>
+   /// <param name="spline">Сплайн.</param>
    public Matrix(Spline spline)
    {
       List<double> h = new();
@@ -92,42 +109,66 @@ public class Matrix
       _al.Add(0.0);
    }
 
-   public void Show()
+   /// <summary>
+   /// Метод, возвращающий матрицу в виде строки.
+   /// </summary>
+   /// <returns></returns>
+   public override string ToString()
    {
+      string ans = "";
       for (int i = 0; i < Size; i++)
       {
          for (int j = 0; j < Size; j++)
-            Console.Write($"{this[i, j].ToString("E5")} ");
-         Console.WriteLine();
+         {
+            ans += $"{this[i, j]:E5} ";
+         }
+         ans += "\n";
       }
+      return ans;
    }
-
 }
 
-public class Vector1
+public class Vector
 {
+   // Размер вектора.
    public int Size { get; init; }
 
+   // Элементы вектора.
    private List<double> _elems = new();
 
+   /// <summary>
+   /// Метод, возвращающий i-ое значение вектора.
+   /// </summary>
+   /// <param name="i">Индекс.</param>
+   /// <returns>Значение вектора.</returns>
    public double this[int i]
    {
       get => _elems[i];
       set => _elems[i] = value;
    }
 
-   public Vector1(ImmutableArray<double> arr)
+   /// <summary>
+   /// Конструктор вектора.
+   /// </summary>
+   /// <param name="arr">Массив.</param>
+   public Vector(ImmutableArray<double> arr)
    {
       _elems = arr.ToList();
       Size = arr.Length;
    }
 
-   public ImmutableArray<double> GetVector()
-   {
-      return _elems.ToImmutableArray<double>();
-   }
+   // ? Зачем надо?
+   /// <summary>
+   /// Метод, возвращающий вектор.
+   /// </summary>
+   /// <returns></returns>
+   public ImmutableArray<double> GetVector() => _elems.ToImmutableArray();
 
-   public Vector1(Spline spline)
+   /// <summary>
+   /// Конструктор вектора.
+   /// </summary>
+   /// <param name="spline">Сплайн.</param>
+   public Vector(Spline spline)
    {
       List<double> h = new();
 
@@ -154,7 +195,11 @@ public class Vector1
        (h[n - 2] + h[n - 1]) / (h[n - 1] * h[n - 2]) * spline._FX[n - 1]);
    }
 
-   public Vector1(int Size)
+   /// <summary>
+   /// Конструктор вектора.
+   /// </summary>
+   /// <param name="Size">Размер вектора.</param>
+   public Vector(int Size)
    {
       this.Size = Size;
       for (int i = 0; i < Size; i++)
@@ -163,22 +208,15 @@ public class Vector1
       }
    }
 
-   public void Write(string outPath)
+   /// <summary>
+   /// Метод, возвращающий вектор в виде строки.
+   /// </summary>
+   /// <returns>Вектор в виде строки.</returns>
+   public override string ToString()
    {
-      using (var sw = new StreamWriter(outPath))
-      {
-         foreach (double value in _elems)
-         {
-            sw.WriteLine($"{value.ToString("E5")} ");
-         }
-      }
-   }
-
-   public void Show()
-   {
-      foreach (double elem in _elems)
-      {
-         Console.WriteLine(elem.ToString("E5"));
-      }
+      string ans = "";
+      foreach (var element in _elems)
+         ans += $"{element:E5}\n";
+      return ans;
    }
 }

@@ -1,7 +1,8 @@
 ﻿using System.Collections.Immutable;
 
-namespace SplineLib;
+namespace Project;
 
+// Перечисление типов сплайнов.
 public enum SplineType
 {
    Interpolating,
@@ -11,47 +12,58 @@ public enum SplineType
 
 public class Spline
 {
-
-   private List<double> _xMesh = new();
-
-   private List<double> __fMesh = new();
-
+   // Тип сплайна.
    public SplineType Type { get; init; }
 
+   // Значения сетки по оси X.
    public ImmutableArray<double> _X { get; init; }
 
+   // Значения функции по сетке.
    public ImmutableArray<double> _FX { get; init; }
 
+   // Значения производной функции по сетке.
    public ImmutableArray<double> _F1X { get; set; }
 
-   public int GetLength() => _FX.Length;
+   /// <summary>
+   /// Метод, возвращающий размер сетки (ЧТО?).
+   /// </summary>
+   /// <returns>Размер в int.</returns>
+   public int Size() => _FX.Length;
 
+   /// <summary>
+   /// Конструктор класса сплайна.
+   /// </summary>
+   /// <param name="_filePath">Файл с данными.</param>
    public Spline(string _filePath)
    {
-      using (var sr = new StreamReader(_filePath))
+      try
       {
-         try
+         using var sr = new StreamReader(_filePath);
+         string splineType = sr.ReadLine();
+         if (splineType == "Interpolating" || splineType == "Интерполирующий")
+            Type = SplineType.Interpolating;
+         else if (splineType == "Smoothing" || splineType == "Сглаживающий")
+            Type = SplineType.Smoothing;
+         else
          {
-            string splineType = sr.ReadLine();
-            if (splineType == "Interpolating" || splineType == "Интерполирующий")
-               Type = SplineType.Interpolating;
-            else if (splineType == "Smoothing" || splineType == "Сглаживающий")
-               Type = SplineType.Smoothing;
-            else
-            {
-               Console.WriteLine("Unkown spline type. Spline type set to Interpolating");
-               Type = SplineType.Interpolating;
-            }
-            _X = sr.ReadLine().Split().Select(item => double.Parse(item)).ToImmutableArray<double>();
-            _FX = sr.ReadLine().Split().Select(item => double.Parse(item)).ToImmutableArray<double>();
+            Console.WriteLine("Unkown spline type. Spline type set to Interpolating");
+            Type = SplineType.Interpolating;
          }
-         catch (Exception ex)
-         {
-            Console.WriteLine("Exception during reading file: ", ex);
-         }
+         _X = sr.ReadLine().Split().Select(double.Parse).ToImmutableArray();
+         _FX = sr.ReadLine().Split().Select(double.Parse).ToImmutableArray();
+      }
+      catch (Exception ex)
+      {
+         throw new Exception("Exception during read file: ", ex);
       }
    }
 
+   /// <summary>
+   /// Метод, возвращающий значение функции в заданной точке.
+   /// </summary>
+   /// <param name="x">Точка.</param>
+   /// <returns>Значение функции в точке.</returns>
+   /// <exception cref="IndexOutOfRangeException">Проверка на принадлежность точки отрезку интерполяции.</exception>
    public double this[double x]
    {
       get

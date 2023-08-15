@@ -1,29 +1,37 @@
-﻿using System.Collections.Immutable;
-
-using MatrixLib;
-
-namespace SolverLib;
+﻿namespace Project;
 
 public class Solver
 {
+   // Матрица.
    public Matrix A { get; init; }
 
-   public Vector1 b { get; init; }
+   // Вектор.
+   public Vector b { get; init; }
 
-   public Solver(Matrix A, Vector1 b)
+   /// <summary>
+   /// Конструктор класса.
+   /// </summary>
+   /// <param name="A">Матрица.</param>
+   /// <param name="b">Вектор.</param>
+   /// <exception cref="Exception">Проверка на размерность матрицы и вектора.</exception>
+   public Solver(Matrix A, Vector b)
    {
       if (A.Size != b.Size)
-         throw new System.Exception("Different sizes of Matrix and Vector1");
+         throw new Exception("Different sizes of Matrix and Vector1");
 
       this.A = A;
       this.b = b;
    }
 
-   public Vector1 LU()
+   /// <summary>
+   /// LU-разложение вектора.
+   /// </summary>
+   /// <returns>Вектор решения после LU-разложения.</returns>
+   public Vector LU()
    {
       Matrix L = new(A.Size);
       Matrix U = new(A.Size);
-      Vector1 y = new(A.Size);
+      Vector y = new(A.Size);
 
       for (int i = 0; i < A.Size; i++)
       {
