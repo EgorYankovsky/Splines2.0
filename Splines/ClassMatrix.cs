@@ -17,6 +17,41 @@ public class Matrix
    private double[]? _au;
 
    /// <summary>
+   /// Метод, определяющий положительную определенность матрицы (в разработке).
+   /// </summary>
+   /// <returns>Логическое значение.</returns>
+   public bool IsPositivelyDefined()
+   {
+      throw new NotImplementedException();
+   }
+
+   /// <summary>
+   /// Конструктор класса.
+   /// </summary>
+   /// <param name="al">Нижний треугольник матрицы.</param>
+   /// <param name="au">Верхний треугольник матрицы.</param>
+   /// <param name="diag">Диагональные элементы.</param>
+   public Matrix(double[] al, double[] au, double[] diag)
+   {
+      Size = diag.Length;
+      _al = al;
+      _di = diag;
+      _au = au;
+   }
+
+   /// <summary>
+   /// Метод, определяющий симметричность матрицы.
+   /// </summary>
+   /// <returns>Логическое значение.</returns>
+   public bool IsSimmetrical()
+   {
+      for (int i = 0; i < Size - 1; i++)
+         if (_al[i + 1] != _au[i])
+            return false;
+      return true;
+   }
+
+   /// <summary>
    /// Метод, возвращающий значение матрицы на i-ой строке и j-ом столбце. 
    /// </summary>
    /// <param name="i">Строка.</param>
@@ -73,7 +108,10 @@ public class Matrix
       _au = new double[Size];
    }
 
-
+   /// <summary>
+   /// Конструктор класса.
+   /// </summary>
+   /// <param name="x">Сетка по оси Х.</param>
    public Matrix(double[] x)
    {
       Size = x.Length;
@@ -144,9 +182,9 @@ public class Vector
    /// Конструктор вектора.
    /// </summary>
    /// <param name="arr">Массив.</param>
-   public Vector(ImmutableArray<double> arr)
+   public Vector(double[] arr)
    {
-      _elems = arr.ToArray();
+      _elems = arr;
       Size = arr.Length;
    }
 
@@ -157,6 +195,11 @@ public class Vector
    /// <returns></returns>
    public ImmutableArray<double> GetVector() => _elems.ToImmutableArray();
 
+   /// <summary>
+   /// Конструктор класса.
+   /// </summary>
+   /// <param name="x">Сетка по оси Х.</param>
+   /// <param name="fx">Значения функции в сетке.</param>
    public Vector(double[] x, double[] fx)
    {
       _elems = new double[x.Length];
