@@ -1,5 +1,4 @@
 ﻿using System.Collections.Immutable;
-using System.Runtime.InteropServices.Marshalling;
 
 namespace Project;
 
@@ -9,13 +8,13 @@ public class Matrix
    public int Size { get; init; }
 
    // Компоненты матрицы нижнего треугольника.
-   private List<double> _al = new();
+   private double[]? _al;
 
    // Компоненты диагонали матрицы.
-   private List<double> _di = new();
+   private double[]? _di;
 
    // Компоненты верхнего треугольника матрицы.
-   private List<double> _au = new();
+   private double[]? _au;
 
    /// <summary>
    /// Метод, возвращающий значение матрицы на i-ой строке и j-ом столбце. 
@@ -69,44 +68,38 @@ public class Matrix
    public Matrix(int Size)
    {
       this.Size = Size;
-
-      for (int i = 0; i < this.Size; i++)
-      {
-         _al.Add(0.0);
-         _di.Add(0.0);
-         _au.Add(0.0);
-      }
+      _di = new double[Size];
+      _al = new double[Size]; 
+      _au = new double[Size];
    }
 
-   /// <summary>
-   /// Конструктор матрицы.
-   /// </summary>
-   /// <param name="spline">Сплайн.</param>
-   public Matrix(Spline spline)
+
+   public Matrix(double[] x)
    {
-      List<double> h = new();
+      Size = x.Length;
+      _di = new double[x.Length];
+      _al = new double[x.Length];
+      _au = new double[x.Length];
 
-      for (int i = 1; i < spline._X.Length; i++)
+      double[] h = new double[x.Length - 1];
+      for (int i = 0; i < h.Length; i++)
+         h[i] = x[i + 1] - x[i];
+
+      _di[0] = 1.0;
+      _al[0] = 0.0;
+      _au[0] = 0.0;
+
+      for (int i = 1; i < Size - 1; i++)
       {
-         h.Add(spline._X[i] - spline._X[i - 1]);
+         _al[i] = 2.0 / h[i - 1];
+         _di[i] = 4.0 * (h[i] + h[i - 1]) / (h[i] * h[i - 1]);
+         _au[i] = 2.0 / h[i];
       }
 
-      Size = spline._X.Length;
+      _di[^1] = 1.0;
+      _al[^1] = 0.0;
+      _au[^1] = 0.0;
 
-      _al.Add(-0.0);
-      _di.Add(1.0);
-      _au.Add(0.0);
-
-      for (int i = 1; i < spline._X.Length - 1; i++)
-      {
-         _al.Add(2.0 / h[i - 1]);
-         _di.Add(4.0 * (1.0 / h[i - 1] + 1.0 / h[i]));
-         _au.Add(2.0 / h[i]);
-      }
-
-      _au.Add(-0.0);
-      _di.Add(1.0);
-      _al.Add(0.0);
    }
 
    /// <summary>
@@ -134,7 +127,7 @@ public class Vector
    public int Size { get; init; }
 
    // Элементы вектора.
-   private List<double> _elems = new();
+   private double[]? _elems;
 
    /// <summary>
    /// Метод, возвращающий i-ое значение вектора.
@@ -153,7 +146,7 @@ public class Vector
    /// <param name="arr">Массив.</param>
    public Vector(ImmutableArray<double> arr)
    {
-      _elems = arr.ToList();
+      _elems = arr.ToArray();
       Size = arr.Length;
    }
 
@@ -164,35 +157,24 @@ public class Vector
    /// <returns></returns>
    public ImmutableArray<double> GetVector() => _elems.ToImmutableArray();
 
-   /// <summary>
-   /// Конструктор вектора.
-   /// </summary>
-   /// <param name="spline">Сплайн.</param>
-   public Vector(Spline spline)
+   public Vector(double[] x, double[] fx)
    {
-      List<double> h = new();
+      _elems = new double[x.Length];
+      Size = x.Length;
 
-      for (int i = 1; i < spline._X.Length; i++)
-      {
-         h.Add(spline._X[i] - spline._X[i - 1]);
-      }
+      double[] h = new double[x.Length - 1];
+      for (int i = 0; i < x.Length - 1; i++)
+         h[i] = x[i + 1] - x[i];
 
-      Size = spline._X.Length;
+      _elems[0] = -1.0 * (2.0 * h[1] + h[2]) / (h[1] * (h[1] + h[2])) * fx[1] +
+                  (h[1] + h[2]) / (h[1] * h[2]) * fx[2] - h[1] / ((h[1] + h[2]) * h[2]) * fx[3];
 
+      for (int i = 1; i < fx.Length - 1; i++)
+         _elems[i] = 6.0 * ((fx[i] - fx[i - 1]) / (h[i - 1] * h[i - 1]) +
+                             (fx[i + 1] - fx[i]) / (h[i] * h[i]));
 
-      _elems.Add(-1.0 * (2.0 * h[1] + h[2]) / (h[1] * (h[1] + h[2])) * spline._FX[1] +
-       (h[1] + h[2]) / (h[1] * h[2]) * spline._FX[2] - h[1] / ((h[1] + h[2]) * h[2]) * spline._FX[3]);
-
-      for (int i = 1; i < spline._FX.Length - 1; i++)
-      {
-         _elems.Add(6.0 * ((spline._FX[i] - spline._FX[i - 1]) / (h[i - 1] * h[i - 1]) +
-         (spline._FX[i + 1] - spline._FX[i]) / (h[i] * h[i])));
-      }
-
-      int n = spline._X.Length - 1;
-
-      _elems.Add(1.0 / (h[n - 2] + h[n - 1]) * (h[n - 1] / h[n - 2] * spline._FX[n - 2] + (2 + h[n - 2] / h[n - 1]) * spline._FX[n]) -
-       (h[n - 2] + h[n - 1]) / (h[n - 1] * h[n - 2]) * spline._FX[n - 1]);
+      _elems[^1] = 1.0 / (h[^2] + h[^1]) * (h[^1] / h[^2] * fx[^3] + (2 + h[^2] / h[^1]) * fx[^1]) -
+                          (h[^2] + h[^1]) / (h[^1] * h[^2]) * fx[^2];
    }
 
    /// <summary>
@@ -202,10 +184,7 @@ public class Vector
    public Vector(int Size)
    {
       this.Size = Size;
-      for (int i = 0; i < Size; i++)
-      {
-         _elems.Add(0.0);
-      }
+      _elems = new double[Size];
    }
 
    /// <summary>

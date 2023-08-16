@@ -1,17 +1,19 @@
 ﻿using Project;
 
-const string inputPath = @"D:\CodeRepos\CS\Splines\Splines\Files\Input.txt";
-const string outputPath = @"D:\CodeRepos\CS\Splines\Splines\Files\Output.txt";
+const string inputPath = @"Files\Input.txt";
+const string outputPath = @"Files\Output.txt";
 
-Spline mySpline = new(inputPath);
-Matrix A = new(mySpline);
-Vector b = new(mySpline);
-Solver mySolver = new(A, b);
-Vector x = mySolver.LU();
-mySpline._F1X = x.GetVector();
-using var sw = new StreamWriter(outputPath);
-sw.WriteLine(x.ToString());
-for (int i = 0; i < (mySpline._X[^1] - mySpline._X[0]) / 0.05;  i++)
+double[] x;
+double[] fx;
+using var sr = new StreamReader(inputPath);
 {
-   Console.WriteLine($"P({mySpline._X[0] + i * 0.05}) = {mySpline[mySpline._X[0] + i * 0.05].ToString("E4")}");
+   x = sr.ReadLine().Split().Select(double.Parse).ToArray();
+   fx = sr.ReadLine().Split().Select(double.Parse).ToArray();
+}
+
+var mySpline = new InterpolatingSpline(x, fx, new LU(new Matrix(x), new Vector(x, fx)));
+using var sw = new StreamWriter(outputPath);
+for (int i = 0; i < (mySpline.X[^1] - mySpline.X[0]) / 0.05;  i++)
+{
+   sw.WriteLine($"P({mySpline.X[0] + i * 0.05:E4}) = {mySpline[mySpline.X[0] + i * 0.05]:E4}");
 }
