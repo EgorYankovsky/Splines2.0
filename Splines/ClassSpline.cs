@@ -50,9 +50,11 @@ public class SmoothingSpline : Spline
    /// <summary>
    /// Конструктор сглаживающего сплайна (в разработке).
    /// </summary>
-   public SmoothingSpline()
+   public SmoothingSpline(double omega, double alpha, double beta, double[] x, double[] fx, Solver Slvr)
    {
-      throw new NotImplementedException();
+      X = x.ToImmutableArray();
+      FX = fx.ToImmutableArray();
+      F1X = Slvr.Solve().GetVector();
    }
 } 
 

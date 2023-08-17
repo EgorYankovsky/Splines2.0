@@ -4,6 +4,11 @@ namespace Project;
 
 public class Matrix
 {
+
+   private int[]? _ig;
+
+   private int[]? _jg;
+
    // Размер матрицы.
    public int Size { get; init; }
 
@@ -106,6 +111,36 @@ public class Matrix
       _di = new double[Size];
       _al = new double[Size]; 
       _au = new double[Size];
+   }
+
+   public Matrix(double[] x, int[] elems, double gamma, double alpha, double beta)
+   {
+      _ig = new int[2 * (elems.Length) + 1];
+      _ig[0] = 0;
+      _ig[1] = 0;
+      _ig[2] = 1;
+      for (int i = 3; i < _ig.Length; i++)
+         _ig[i] = _ig[i - 1] + 2 + (i + 1) % 2;
+
+      _jg = new int[_ig[^1]];
+      _jg[0] = 0;
+      _jg[1] = 0;
+      _jg[2] = 1;
+      int lastValue = 0;
+
+      for (int i = 3; i < _ig.Length - 1; i++)
+      {
+         int diff = _ig[i + 1] - _ig[i];
+         for (int j = 0; j < diff; j++)
+         {
+            _jg[_ig[i] + j] = lastValue;
+            lastValue++;
+         }
+         if (i % 2 == 0)
+            lastValue--;
+         lastValue--;
+      }
+      _jg[^1] = lastValue;
    }
 
    /// <summary>
