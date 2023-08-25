@@ -15,7 +15,7 @@ public abstract class Solver
    public abstract Vector Solve();
 }
 
-public class LL : Solver
+public class LLt : Solver
 {
    /// <summary>
    /// Конструктор класса.
@@ -23,7 +23,7 @@ public class LL : Solver
    /// <param name="A">Матрица.</param>
    /// <param name="b">Вектор.</param>
    /// <exception cref="Exception">Проверка на размерность матрицы и вектора.</exception>
-   public LL(Matrix A, Vector b)
+   public LLt(Matrix A, Vector b)
    {
       if (A.Size != b.Size)
          throw new Exception("Different sizes of Matrix and Vector.");
@@ -41,7 +41,7 @@ public class LL : Solver
     }
 }
 
-public class LDL : Solver
+public class LDLt : Solver
 {
    /// <summary>
    /// Конструктор класса.
@@ -49,7 +49,7 @@ public class LDL : Solver
    /// <param name="A">Матрица.</param>
    /// <param name="b">Вектор.</param>
    /// <exception cref="Exception">Проверка на размерность матрицы и вектора.</exception>
-   public LDL(Matrix A, Vector b)
+   public LDLt(Matrix A, Vector b)
    {
       if (A.Size != b.Size)
          throw new Exception("Different sizes of Matrix and Vector1");

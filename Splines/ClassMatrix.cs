@@ -2,11 +2,53 @@
 
 namespace Project;
 
+public class LocalMatrix
+{
+   private protected double[,] _values;
+
+   public double this[int i, int j]
+   {
+      get => _values[i, j];
+      set => _values[i, j] = value;
+   }
+}
+
+public class LocalMatrixG : LocalMatrix 
+{
+   public LocalMatrixG (double h)
+   {
+      _values = new double[4, 4]
+      {
+         {1.2 / h, 0.1, -1.2 / h, 0.1},
+         {0.1, 0.133333333333333 * h, -0.1, -0.033333333333333 * h},
+         {-1.2 / h, -0.1, 1.2 / h, -0.1},
+         {0.1, -0.033333333333333 * h, -0.1, 0.133333333333333 * h}
+      };
+   }
+}
+
+// TODO: Переставить в internal
+public class LocalMatrixSecondDeriv : LocalMatrix
+{
+   public LocalMatrixSecondDeriv (double h)
+   {
+      _values = new double[4, 4] 
+      {
+         {60.0 / (h * h * h), 30.0 / (h * h), -60.0 / (h * h * h), 30.0 / (h * h)},
+         {30.0 / (h * h), 16 / h, -30.0 / (h * h), 14.0 / h},
+         {-60.0 / (h * h * h), -30.0 / (h * h), 60.0 / (h * h * h), -30.0 / (h * h)},
+         {30.0 / (h * h), 14 / h, -30.0 / (h * h), 16.0 / h}
+      };
+   }
+}
+
+
 public class Matrix
 {
-
+   // Массив ссылок на элементы матрицы.
    private int[]? _ig;
 
+   // Массив ссылок на элементы матрицы.
    private int[]? _jg;
 
    // Размер матрицы.
@@ -54,9 +96,10 @@ public class Matrix
          if (_al[i + 1] != _au[i])
             return false;
       return true;
-   }
+   } 
 
    /// <summary>
+   ///
    /// Метод, возвращающий значение матрицы на i-ой строке и j-ом столбце. 
    /// </summary>
    /// <param name="i">Строка.</param>
@@ -66,18 +109,14 @@ public class Matrix
    {
       get
       {
-         switch (j - i)
+         return (j - i) switch
          {
-            case -1:
-               return _al[j + 1];
-            case 0:
-               return _di[j];
-            case 1:
-               return _au[j - 1];
-            default:
-               return 0.0;
-         }
-      }
+               -1 => _al[j + 1],
+               0 => _di[j],
+               1 => _au[j - 1],
+               _ => 0.0,
+         };
+        }
       set
       {
          switch(j - i)
@@ -113,9 +152,17 @@ public class Matrix
       _au = new double[Size];
    }
 
+   /// <summary>
+   /// Конструктор матрицы.
+   /// </summary>
+   /// <param name="x">Массив узлов.</param>
+   /// <param name="elems">Массив ссылок на элементы.</param>
+   /// <param name="gamma">Параметр гамма.</param>
+   /// <param name="alpha">Параметр альфа.</param>
+   /// <param name="beta">Параметр бета.</param>
    public Matrix(double[] x, int[] elems, double gamma, double alpha, double beta)
    {
-      _ig = new int[2 * (elems.Length) + 1];
+      _ig = new int[2 * elems.Length + 1];
       _ig[0] = 0;
       _ig[1] = 0;
       _ig[2] = 1;
@@ -141,6 +188,85 @@ public class Matrix
          lastValue--;
       }
       _jg[^1] = lastValue;
+
+      _di = new double[2 * elems.Length];
+      _au = new double[_ig[^1]];
+      _al = new double[_ig[^1]];
+
+      int fundamentalIterator = 0;
+      for (int i = 0; i < elems.Length - 1; i++)
+      {
+         double h = x[elems[i + 1]] - x[elems[i]];
+         var G = new LocalMatrixG(h);
+         var SD = new LocalMatrixSecondDeriv(h);
+         var localMatrix = new double[4, 4];
+         for (int ii = 0; ii < 4; ii++)
+         {
+            for (int jj = 0; jj < 4; jj++)
+            {
+               int counter = 0;
+               for (int k = elems[i]; k < elems[i + 1]; k++)
+               {
+                  localMatrix[ii, jj] += gamma * BasisFunction.GetValue(ii, h, (x[k] - x[elems[i]]) / h) * BasisFunction.GetValue(jj, h, (x[k] - x[elems[i]]) / h);
+                  counter++;
+               }
+               if (counter < 4)
+                  Console.WriteLine("Attention!\n"+
+                  $"Between {x[elems[i]]} and {x[elems[i + 1]]} there are only {counter} points!\n"+
+                  "Possible inaccuracies in calculations.");
+
+               localMatrix[ii, jj] += alpha * G[ii, jj] + beta * SD[ii, jj];
+
+            }  
+         }
+
+
+         int _i = 0;
+         int[] pointers = new int[4] {fundamentalIterator,
+                                      fundamentalIterator + 1,
+                                      fundamentalIterator + 2,
+                                      fundamentalIterator + 3};
+         foreach (var pi in pointers)
+         {
+            int _j = 0;
+            foreach (var pj in pointers)
+            {
+                  switch(pi - pj)
+                  {
+                     case 0:
+                     {
+                        _di[pi] += localMatrix[_i, _j];
+                        break;
+                     }
+                     case < 0:
+                     {
+                        int ind = _ig[pj];
+
+                        for (; ind <= _ig[pj + 1] - 1; ind++)
+                              if (_jg[ind] == pi)
+                                 break;
+
+                        _au[ind] += localMatrix[_i, _j];
+                        break;
+                     }
+                     case > 0:
+                     {
+                        int ind = _ig[pi];
+                        
+                        for (; ind <= _ig[pi + 1] - 1; ind++)
+                              if (_jg[ind] == pj)
+                                 break;
+
+                        _al[ind] += localMatrix[_i, _j];
+                        break;
+                     }
+                  }
+                  _j++;
+            }
+            _i++;
+         }
+         fundamentalIterator += 2;
+      }
    }
 
    /// <summary>
@@ -229,6 +355,44 @@ public class Vector
    /// </summary>
    /// <returns></returns>
    public ImmutableArray<double> GetVector() => _elems.ToImmutableArray();
+
+   /// <summary>
+   /// Конструктор класса.
+   /// </summary>
+   /// <param name="x">Массив точек.</param>
+   /// <param name="elems">Целочисленный массив границ элементов.</param>
+   /// <param name="fx">Массив значений функции.</param>
+   /// <param name="omega">Параметр омега.</param>
+   public Vector(double[] x, int[] elems, double[] fx, double omega)
+   {
+      _elems = new double[2 * elems.Length];
+
+      int fundamentalIterator = 0;
+      for (int i = 0; i < elems.Length - 1; i++)
+      {
+         double[] localVector = new double[4];
+
+         double h = x[elems[i + 1]] - x[elems[i]]; 
+         for (int ii = 0; ii < 4; ii++)
+         {
+            int counter = 0;
+            for (int k = elems[i]; k < elems[i + 1]; k++)
+            {
+               localVector[ii] += omega * BasisFunction.GetValue(ii, h, (x[k] - x[elems[i]]) / h) * fx[k];
+               counter++;
+            }
+            if (counter < 4)
+               Console.WriteLine("Attention!\n"+
+               $"Between {x[elems[i]]} and {x[elems[i + 1]]} there are only {counter} points!\n"+
+               "Possible inaccuracies in calculations.");
+         }
+
+         for (int j = 0; j < 4; j++)
+            _elems[j + fundamentalIterator] += localVector[j];
+         fundamentalIterator += 2;
+      }
+   }
+
 
    /// <summary>
    /// Конструктор класса.

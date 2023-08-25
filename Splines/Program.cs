@@ -13,7 +13,8 @@ using var sr = new StreamReader(inputPath);
    fx = sr.ReadLine().Split().Select(double.Parse).ToArray();
 }
 
-var m = new Matrix(new double[] {}, new int[] {0, 2, 4, 6, 8, 10}, 0, 0, 0);
+var m = new Matrix(x, new int[] {0, 4, 10}, 1, 0, 0.001);
+var v = new Vector(x, new int[] {0, 4, 10}, fx, 1.0);
 
 // * Сама мать.
 var mySpline = new InterpolatingSpline(x, fx, new LU(new Matrix(x), new Vector(x, fx)));
